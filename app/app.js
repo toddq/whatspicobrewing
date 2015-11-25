@@ -13,7 +13,7 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
         machineId: '',
         pollingFrequency: 30 * 1000,
         debug: false,
-        testServer: true
+        testServer: false
     };
     
     $scope.$watch('isBrewing', function (isBrewing, wasBrewing) {
