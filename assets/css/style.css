@@ -1,0 +1,119 @@
+@import url("https://fonts.googleapis.com/css?family=News+Cycle:400,700");
+
+body {
+    font-family: Georgia,"Times New Roman",Times,serif;
+    font-size: 15px;
+    color: #777777;
+}
+
+.config {
+	border: 1px solid;
+	border-radius: 5px;
+	width: 475px;
+	margin: 20px auto;
+	padding: 10px
+}
+
+.form-horizontal .control-label {
+    padding-top: 7px;
+}
+
+.session-temps.container {
+	width: 300px;
+	padding: 0px 15px 15px;
+}
+
+.temp {
+	font-size: 2em;
+	font-family: 'News Cycle', sans-serif;
+}
+
+.progress {
+	width: 500px;
+	margin-top: 15px;
+}
+
+.progress .progress-bar{
+	min-width: 2em;
+	background-color: #337ab7;
+}
+
+.steps {
+	width: 500px;
+	margin-left: auto;
+	margin-right: auto;
+	list-style: none;
+	padding: 0px;
+}
+
+@media only screen and (max-width : 500px){
+	.config {
+		width: 95%;
+	}
+	.progress {
+		width: 95%;
+	}
+	.steps {
+		width: 100%;
+	}
+	.time-status {
+		width: 100%;
+		text-align: center;
+	}
+	.col-xs-6, .col-xs-3 {
+		padding: 0px;
+	}
+}
+
+.step {
+	height: 50px;
+	border-top: 1px solid;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	-webkit-transition: all .5s ease-in-out;
+	transition: all .5s ease-in-out;
+}
+.step:first-child {
+	border-top: none;
+}
+
+.step .temp {
+	font-size: inherit;
+	font-family: 'News Cycle', sans-serif;
+}
+
+.step .time {
+	font-family: 'News Cycle', sans-serif;
+	text-align: right;
+}
+
+.step.done {
+	background-color: #cccccc;
+	height: 40px;
+	font-size: .9em;
+}
+
+.step.current {
+	background-color: rgba(0, 255, 0, .5);
+	height: 65px;
+	font-size: 1.3em;
+}
+
+.step.pause {
+	color: #ffffff;
+	height: 65px;
+	font-size: 1.3em;
+	-webkit-animation: pulse 1s infinite alternate;
+    animation: pulse 1s  infinite alternate;
+}
+
+@-webkit-keyframes pulse {
+    0%   { background-color: rgba(200, 20, 20, 0.5); }
+    100% { background-color: rgba(255, 0, 0, 1.0); }
+}
+ 
+@keyframes pulse {
+    0%   { background-color: rgba(200, 20, 20, 0.75); }
+    100% { background-color: rgba(255, 0, 0, 1.0); }
+}

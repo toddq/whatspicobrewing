@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="PicoBrewing">
+<head>
+    <meta charset="UTF-8">
+    <meta name=viewport content="width=device-width, initial-scale=1">
+
+    <title>What's Pico Brewing</title>
+    <link rel="icon" type="image/png" href="http://picobrew.com/PicoBrew_favicon.png">
+
+    <!-- CSS -->
+    <!-- load Bootstrap and custom style.css -->
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+
+    <!-- JS -->
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/angular-resource/angular-resource.min.js"></script>
+    <script src="bower_components/moment/min/moment.min.js"></script>
+    <script src="bower_components/moment/min/locales.min.js"></script>
+    <script src="bower_components/humanize-duration/humanize-duration.js"></script>
+    <script src="bower_components/angular-moment/angular-moment.min.js"></script>
+    <script src="bower_components/angular-timer/dist/angular-timer.min.js"></script>
+    <script src="bower_components/ng-elif/src/elif.js"></script>
+    <script src="bower_components/underscore/underscore-min.js"></script>
+    <script src="app/app.js"></script>
+</head>
+
+<body ng-controller="SessionController">
+
+    <form ng-if="!config.userId || !config.machineId || !config.sessionId" class="config form-horizontal">
+        <div ng-if="!config.userId" class="form-group">
+            <label for="userId" class="control-label col-sm-4">
+                User ID:
+            </label>
+            <div class="col-sm-8">
+               <input type="text" name="userId" class="form-control" 
+                      ng-model="userIdInput" ng-keypress="updateId($event, 'userId', userIdInput)" 
+                      placeholder="Your 32 character unique id" >
+           </div>
+        </div>
+        <div ng-if="!config.machineId" class="form-group">
+            <label for="machineId" class="control-label col-sm-4">
+                Machine ID:
+            </label>
+            <div class="col-sm-8">
+                <input type="text" name="machineId" class="form-control"
+                    ng-model="machineIdInput" ng-keypress="updateId($event, 'machineId', machineIdInput)" 
+                    placeholder="Your Zymatic's unique id" >
+            </div>
+        </div>
+        <div ng-if="!config.sessionId" class="form-group">
+            <label for="sessionId" class="control-label col-sm-4">
+                Session Id:
+            </label>
+            <div class="col-sm-8">
+                <input type="text" name="sessionId" class="form-control"
+                       ng-model="sessionIdInput" ng-keypress="updateId($event, 'sessionId', sessionIdInput)" 
+                       placeholder="View a previous session id" >
+            </div>
+        </div>
+    </form>
+
+    <div ng-if="config.userId && config.machineId && !config.sessionId">
+        Nothing is currently brewing.
+    </div>
+
+    <div ng-else-if="config.userId && config.machineId && config.sessionId">
+        <h3 class="text-center">{{recipe.name}}</h3>
+        <h5 ng-if="isActiveSession" class="text-center text-success">Currently Brewing</h5>
+        <h6 ng-if="!isActiveSession" class="text-center">Previous Brew Session</h6>
+        
+        <div class="container">
+
+            <div class="row" ng-if="isActiveSession">
+                <div class="col-xs-6 time-status text-right">
+                    Brewing: {{session.elapsed | amDurationFormat : 'minute'}}
+                </div>
+                <div class="col-xs-6 time-status">
+                    Remaining: ~{{session.remaining | amDurationFormat : 'minute'}}
+                </div>
+            </div>
+
+            <div class="row" ng-else>
+                <div class="text-center">
+                    Brew Time: {{session.elapsed | amDurationFormat : 'minute'}}
+                </div>
+            </div>
+
+            <div class="progress center-block">
+                <div class="progress-bar" role="progressbar"
+                     aria-valuemin="0" aria-valuemax="100" 
+                     aria-valuenow="{{session.progressBar}}" style="width: {{session.progressBar}}%;">
+                       {{session.progressBar}}%
+                </div>
+            </div>
+        </div>
+
+        <div ng-if="isActiveSession" class="session-temps container">
+            <div class="row">
+                <div class="col-xs-6 text-center">
+                    <div>Current Temp</div>
+                    <div class="temp">{{currentTemp}}&deg;F</div>
+                </div>
+                <div class="col-xs-6 text-center">
+                    <div>Target Temp</div>
+                    <div class="temp">{{targetTemp}}&deg;F</div>
+                </div>
+            </div>
+        </div>
+        
+        <ul class="steps list-group">
+            <li class="step list-group-item" ng-repeat="step in recipe.steps" ng-class="step.state">
+
+                <span class="col-xs-6">
+                    {{step.name}}
+                </span>
+
+                <span ng-show="step.targetTemp > 0" class="col-xs-3 temp">
+                    {{step.targetTemp}}&deg;F
+                </span>
+
+                <!-- step is in progress and has a time length, so count down -->
+                <span ng-if="step.state === 'current' && !step.tempTransition && step.time" 
+                      class="col-xs-3 time">
+                    <timer end-time="step.startedAt.getTime() + (step.time * 60 * 1000)">{{minutes}}:{{seconds}}</timer>
+                </span>
+
+                <!-- step is in progress but doesn't have a fixed time, count up from start time -->
+                <span ng-else-if="step.state === 'current' && !step.tempTransition && !step.time" 
+                      class="col-xs-3 time">
+                    <timer start-time="step.startedAt">{{minutes}}:{{sseconds}}</timer>
+                </span>
+
+                <!-- There's a temperature change, and the target hasn't been reached yet.  -->
+                 <span ng-else-if="step.state === 'current' && step.tempTransition && !step.tempTransitionMade"
+                       class="col-xs-3 time">
+                     <timer start-time="step.startedAt">{{minutes}}:{{sseconds}}</timer>
+                 </span>
+
+                <!-- There's was a temperature change and we're counting down the timer. -->
+                 <span ng-else-if="step.state === 'current' && step.tempTransition && step.tempTransitionMade"
+                       class="col-xs-3 time">
+                     <timer end-time="step.tempTransitionMade.getTime() + (step.time * 60 * 1000)">{{minutes}}:{{seconds}}</timer>
+                 </span>
+
+                <!-- step is done, show the recorded time for it -->
+                <span ng-else-if="step.state === 'done'" class="col-xs-3 time">
+                    {{step.elapsedTimeInMin}} min
+                </span>
+
+                <!-- step hasn't started yet, show expected time -->
+                <span ng-else-if="!step.state && step.time" class="col-xs-3 time">
+                    {{step.time}} min
+                </span>
+
+                <!-- step hasn't started yet, and doesn't have a time length -->
+                <span ng-else class="col-xs-3 time"> </span>
+
+            </li>
+        </ul>
+    </div>
+
+</body>
+</html>
