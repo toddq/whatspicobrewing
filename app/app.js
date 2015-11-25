@@ -4,15 +4,15 @@ var Location = {
     PAUSE: 6
 };
 
-window.App = angular.module('PicoBrewing', ['ngResource', 'angularMoment', 'timer', 'elif']);
+window.App = angular.module('PicoBrewing', ['ngResource', 'timer', 'elif']);
 
 App.controller("SessionController", function($scope, $location, $http, $timeout) {
 
     $scope.config = {
         userId: '',
         machineId: '',
-        pollingFrequency: 10000,
-        debug: true,
+        pollingFrequency: 30 * 1000,
+        debug: false,
         testServer: true
     };
     
@@ -46,7 +46,10 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
             getSessionInfo(sessionId)
                 .then(addRecipeSteps)
                 .then(getSessionLog)
-                .then(processLogEntries);
+                .then(processLogEntries)
+                .then(function () {
+                    $timeout(updateLogEntries, $scope.config.pollingFrequency);
+                });
         }
     });
 
@@ -204,6 +207,14 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
         return entries;
     }
 
+    function updateLogEntries () {
+        getSessionLog()
+            .then(processLogEntries)
+            .finally(function () {
+                $timeout(updateLogEntries, $scope.config.pollingFrequency);
+            });
+    }
+
     function processLogEntries (log) {
         debug('processing log entries');
         $scope.session.startedAt = log[0].date;
@@ -356,4 +367,49 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
         }
         return $http.get(url);
     }
+});
+
+// replacement for moment/humanize.  I mostly want precision, except I want some fuzziness
+// on the estimated time remaining that grows sharper as it gets closer.
+App.filter('durationFormat', function () {
+    return function (timeInMinutes, fuzz) {
+        if (timeInMinutes) {
+            var hours = Math.floor(timeInMinutes/60);
+            var minutes = timeInMinutes % 60;
+
+            if (hours === 0) {
+                return minutes + ' minutes';
+            }
+            else if (hours > 0 && fuzz) {
+                // round minutes to the quarter hour
+                if (minutes >= 0 && minutes <=8) {
+                    minutes = 0;
+                }
+                else if (minutes > 8 && minutes <= 23) {
+                    minutes = 15;
+                }
+                else if (minutes > 23 && minutes <= 38) {
+                    minutes = 30;
+                }
+                else if (minutes > 38 && minutes <= 52) {
+                    minutes = 45;
+                }
+                else if (minutes > 52) {
+                    minutes = 0;
+                    hours += 1;
+                }
+                var output = hours + ' hour';
+                if (hours > 1) { 
+                    output += 's'; 
+                }
+                if (minutes > 0) {
+                    output += ' ' + minutes + ' minutes';
+                }
+                return output;
+            }
+            else {
+                return hours + 'h ' + minutes + 'm';
+            }
+        }
+    };
 });

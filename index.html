@@ -16,9 +16,8 @@
     <script src="bower_components/angular/angular.min.js"></script>
     <script src="bower_components/angular-resource/angular-resource.min.js"></script>
     <script src="bower_components/moment/min/moment.min.js"></script>
-    <script src="bower_components/moment/min/locales.min.js"></script>
     <script src="bower_components/humanize-duration/humanize-duration.js"></script>
-    <script src="bower_components/angular-moment/angular-moment.min.js"></script>
+    <!-- <script src="bower_components/angular-moment/angular-moment.min.js"></script> -->
     <script src="bower_components/angular-timer/dist/angular-timer.min.js"></script>
     <script src="bower_components/ng-elif/src/elif.js"></script>
     <script src="bower_components/underscore/underscore-min.js"></script>
@@ -60,7 +59,7 @@
         </div>
     </form>
 
-    <div ng-if="config.userId && config.machineId && !config.sessionId">
+    <div ng-if="config.userId && config.machineId && !config.sessionId" class="text-center">
         Nothing is currently brewing.
     </div>
 
@@ -73,16 +72,16 @@
 
             <div class="row" ng-if="isActiveSession">
                 <div class="col-xs-6 time-status text-right">
-                    Brewing: {{session.elapsed | amDurationFormat : 'minute'}}
+                    Brewing: {{session.elapsed | durationFormat}}
                 </div>
                 <div class="col-xs-6 time-status">
-                    Remaining: ~{{session.remaining | amDurationFormat : 'minute'}}
+                    Remaining: ~{{session.remaining | durationFormat : 'fuzz'}}
                 </div>
             </div>
 
             <div class="row" ng-else>
                 <div class="text-center">
-                    Brew Time: {{session.elapsed | amDurationFormat : 'minute'}}
+                    Brew Time: {{session.elapsed | durationFormat}}
                 </div>
             </div>
 
