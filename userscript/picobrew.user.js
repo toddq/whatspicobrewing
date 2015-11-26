@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name           What's Picobrewing
 // @description    Alternative view for a Zymatic brew session
-// @namespace      http://github.com/toddq/picobrewing
+// @namespace      http://github.com/toddq/whatspicobrewing
 // @author         toddq
 // @license        GNU GPL v3 (http://www.gnu.org/copyleft/gpl.html)
-// @version        0.1
+// @version        0.2
 // @include        https://picobrew.com/*
 // ==/UserScript==
 
@@ -12,7 +12,7 @@ if (typeof(jQuery) === 'undefined') { return; }
 
 var userUuid;
 var machineId;
-var linkBase = 'https://whatspicobrewing.firebaseapp.com/#?';
+var linkBase = 'https://toddq.github.io/whatspicobrewing/#?';
 
 $(function(){
     initVars();

@@ -10,13 +10,13 @@ TODO: screenshot
 The easiest thing is to install the browser user script which will add links to the Picobrew website to open the alternative view.  
 
 - First install either [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en) (if using Chrome) or [Greasemonkey](https://addons.mozilla.org/en-us/firefox/addon/greasemonkey/) (if using Firefox).
-- Then install the script by visiting [this link](http://toddq.github.io/picobrewing/userscript/picobrew.user.js) and clicking 'Install'.
+- Then install the script by visiting [this link](http://toddq.github.io/whatspicobrewing/userscript/picobrew.user.js) and clicking 'Install'.
 - When logged into the [Picobrew](https://picobrew.com/) website you'll now see some new links or buttons for [Alt View] that will open in a new tab.
 
 ###### Direct
 Alternatively you can connect to the page directly and enter your user id, machine id, and session id. To use with a mobile device (that doesn't allow userscripts) you'll need to send yourself the link for your machine.
 
-[https://whatspicobrewing.firebaseapp.com]()
+[https://toddq.github.io/whatspicobrewing]()
 
 - Your user id (it's not the one you log in with) can be retrieved by logging into your [Picobrew](https://picobrew.com/) account, opening the Javascript console, and entering `$('#user').val()`.
 - Your machine id can be retrieved from the [Picobrew Settings](https://picobrew.com/Members/User/EditSettings.cshtml) page.  It's the 'Zymatic ID'.
@@ -27,7 +27,6 @@ I'm hosting the page publicly for your convenience, but it's designed as a simpl
 
 ### TODO
 
-- Move hosting to GH Pages
 - Test with live session
 - Screenshot in Readme
 - Add Notes
