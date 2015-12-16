@@ -16,7 +16,7 @@ The easiest thing is to install the browser user script which will add links to 
 ###### Direct
 Alternatively you can connect to the page directly and enter your user id, machine id, and session id. To use with a mobile device (that doesn't allow userscripts) you'll need to send yourself the link for your machine.
 
-[https://toddq.github.io/whatspicobrewing]()
+[https://toddq.github.io/whatspicobrewing](https://toddq.github.io/whatspicobrewing)
 
 - Your user id (it's not the one you log in with) can be retrieved by logging into your [Picobrew](https://picobrew.com/) account, opening the Javascript console, and entering `$('#user').val()`.
 - Your machine id can be retrieved from the [Picobrew Settings](https://picobrew.com/Members/User/EditSettings.cshtml) page.  It's the 'Zymatic ID'.
