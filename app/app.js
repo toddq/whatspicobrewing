@@ -75,6 +75,7 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
         $scope.config.userId = queryParams.userId;
         $scope.config.machineId = queryParams.machineId;
         $scope.config.sessionId = queryParams.sessionId;
+        $scope.config.debug = queryParams.debug === 'true';
         $scope.isBrewing = false;
         $scope.isActiveSession = false;
         debug('userId from url: ', $scope.config.userId);
@@ -85,7 +86,7 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
     function checkIfCurrentlyBrewing () {
         return get('/Json/brewhouseJson.cshtml?user=' + $scope.config.userId + '&justname=5')
             .then(function (data) {
-                $scope.isBrewing = data.data === 'active';;
+                $scope.isBrewing = data.data.replace(/"/g, '') === 'active';
                 debug('currently brewing?', $scope.isBrewing);
                 $timeout(checkIfCurrentlyBrewing, $scope.config.pollingFrequency);
                 return $scope.isBrewing;
@@ -197,7 +198,7 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
         data.split('|').forEach(function (entryString) {
             var entryElements = entryString.split(',');
             var entry = {
-                date:     new Date(parseInt(entryElements[0].replace('"', ''))),
+                date:     new Date(parseInt(entryElements[0].replace(/"/g, ''))),
                 step:     entryElements[1].replace('null', ''),
                 wortTemp: entryElements[2],
                 note:     entryElements[7]
