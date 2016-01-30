@@ -128,6 +128,11 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
         return getAllRecipes()
             .then(function (recipes) {
                 var _recipe = _.findWhere(recipes, {name: $scope.recipe.name});
+                // TODO:
+                if (!_recipe) {
+                    alert('The recipe for ' + $scope.recipe.name + ' could not be found.  Only recipes currently synced to your Zymatic can be viewed.')
+                    return;
+                }
                 angular.extend($scope.recipe, _recipe);
                 debug('current recipe: ', $scope.recipe);
             });
@@ -200,7 +205,7 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
             var entry = {
                 date:     new Date(parseInt(entryElements[0].replace(/"/g, ''))),
                 step:     entryElements[1].replace('null', ''),
-                wortTemp: entryElements[2],
+                wortTemp: parseInt(entryElements[2]),
                 note:     entryElements[7]
             };
             entries.push(entry);
@@ -299,11 +304,11 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
             step.actualTemp = entry.wortTemp;
             if (step.tempTransition !== 0 && !step.tempTransitionMade) {
                 // heating
-                if (step.tempTransition > 0 && step.actualTemp >= step.temp) {
+                if (step.tempTransition > 0 && step.actualTemp >= step.targetTemp) {
                     step.tempTransitionMade = entry.date;
                 }
                 // chilling
-                else if (step.tempTransition < 0 && step.actualTemp <= step.temp) {
+                else if (step.tempTransition < 0 && step.actualTemp <= step.targetTemp) {
                     step.tempTransitionMade = entry.date;
                 }
             }
@@ -346,6 +351,8 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
                     timeRemaining += step.time;
                 }
                 else {
+                    // step is current and temp transition's been made IF there was one
+                    // TODO: there is a bug here somewhere
                     var stepTimeMs = step.tempTransitionMade ? step.tempTransitionMade.getTime() : step.startedAt.getTime()
                         + (step.time * 60 * 1000) - $scope.lastUpdated.getTime();
                     timeRemaining += Math.round(stepTimeMs/1000/60);
@@ -362,9 +369,9 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
     }    
 
     function get(path) {
-        var url = 'https://crossorigin.me/' + 'https://picobrew.com' + path;
+        var url = 'https://crossorigin.me/' + 'https://picobrew.com' + path + '&_=' + new Date().getTime();
         if ($scope.config.testServer) {
-            url = 'http://localhost:4567' + path;            
+            url = 'http://localhost:4567' + path;
         }
         return $http.get(url);
     }
