@@ -176,7 +176,8 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
                 if (step.index === 0) {
                     // step 0 is a special case
                     step.tempTransition = step.targetTemp - 60;
-                } else {
+                } else if (step.location !== 6) {
+                    // 6 indicates pause
                     step.tempTransition = step.targetTemp - recipe.steps[step.index-1].targetTemp;
                 }
 
