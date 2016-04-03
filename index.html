@@ -113,12 +113,15 @@
                     {{step.name}}
                 </span>
 
-                <span ng-show="step.targetTemp > 0" class="col-xs-3 temp">
+                <span ng-show="step.targetTemp > 0 && step.location !== 6" class="col-xs-3 temp">
                     {{step.targetTemp}}&deg;F
                 </span>
 
+                <!-- short circuite pause steps -->
+                <span ng-if="step.location === 6" class="col-xs-3 time"> </span>
+
                 <!-- step is in progress and has a time length, so count down -->
-                <span ng-if="step.state === 'current' && !step.tempTransition && step.time" 
+                <span ng-else-if="step.state === 'current' && !step.tempTransition && step.time" 
                       class="col-xs-3 time">
                     <timer end-time="step.startedAt.getTime() + (step.time * 60 * 1000)">{{minutes}}:{{sseconds}}</timer>
                 </span>
