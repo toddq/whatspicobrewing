@@ -1,6 +1,7 @@
 'use strict';
 
 var Location = {
+    START: 0,
     PAUSE: 6
 };
 
@@ -173,12 +174,14 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
                     location:   parseInt(steps[3]),
                 };
 
-                if (step.index === 0) {
+                if (step.index === Location.START) {
                     // step 0 is a special case
                     step.tempTransition = step.targetTemp - 60;
-                } else if (step.location !== 6) {
+                } else if (step.location !== Location.PAUSE) {
                     // 6 indicates pause
                     step.tempTransition = step.targetTemp - recipe.steps[step.index-1].targetTemp;
+                } else if (step.location === Location.PAUSE && step.targetTemp === 0) {
+                    step.targetTemp = recipe.steps[step.index-1].targetTemp;
                 }
 
                 recipe.steps.push(step);                
