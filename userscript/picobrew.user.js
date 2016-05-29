@@ -6,6 +6,8 @@
 // @license        GNU GPL v3 (http://www.gnu.org/copyleft/gpl.html)
 // @version        0.2
 // @include        https://picobrew.com/*
+// @grant GM_setValue
+// @grant GM_getValue
 // ==/UserScript==
 
 if (typeof(jQuery) === 'undefined') { return; }
