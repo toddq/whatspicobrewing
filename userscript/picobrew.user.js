@@ -4,8 +4,9 @@
 // @namespace      http://github.com/toddq/whatspicobrewing
 // @author         toddq
 // @license        GNU GPL v3 (http://www.gnu.org/copyleft/gpl.html)
-// @version        0.2
+// @version        0.3
 // @include        https://picobrew.com/*
+// @include        https://*.picobrew.com/*
 // @grant GM_setValue
 // @grant GM_getValue
 // ==/UserScript==
