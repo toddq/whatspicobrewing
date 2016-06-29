@@ -33,6 +33,7 @@ I'm hosting the page publicly for your convenience, but it's designed as a simpl
 
 ### TODO
 
+- Add a link to the Now Brewing section at /Members/User/brewhouse.cshtml when active.
 - Add Notes
     - View
     - Create/Edit/Delete
