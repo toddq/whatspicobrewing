@@ -356,8 +356,7 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
                 }
                 else {
                     // step is current and temp transition's been made IF there was one
-                    // TODO: there is a bug here somewhere
-                    var stepTimeMs = step.tempTransitionMade ? step.tempTransitionMade.getTime() : step.startedAt.getTime()
+                    var stepTimeMs = (step.tempTransitionMade ? step.tempTransitionMade.getTime() : step.startedAt.getTime())
                         + (step.time * 60 * 1000) - $scope.lastUpdated.getTime();
                     timeRemaining += Math.round(stepTimeMs/1000/60);
                 }
