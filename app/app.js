@@ -372,11 +372,12 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
     }    
 
     function get(path) {
-        var url = 'https://crossorigin.me/' + 'https://picobrew.com' + path + '&_=' + new Date().getTime();
+        var url = 'https://cors-anywhere.herokuapp.com/'
+            + 'https://picobrew.com' + path + '&_=' + new Date().getTime();
         if ($scope.config.testServer) {
             url = 'http://localhost:4567' + path;
         }
-        return $http.get(url);
+        return $http.get(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
     }
 });
 
