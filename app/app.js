@@ -10,13 +10,11 @@ window.App = angular.module('PicoBrewing', ['ngResource', 'timer', 'elif']);
 App.controller("SessionController", function($scope, $location, $http, $timeout) {
 
     $scope.config = {
-        userId: '',
-        machineId: '',
         pollingFrequency: 30 * 1000,
         debug: false,
         testServer: false
     };
-    
+
     $scope.$watch('isBrewing', function (isBrewing, wasBrewing) {
         if (isBrewing) {
             getActiveSession()
@@ -29,14 +27,14 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
                     else {
                         debug('got the active session');
                         $scope.config.sessionId = sessionId;
-                        $scope.isActiveSession = true;    
+                        $scope.isActiveSession = true;
                     }
                 });
         }
         else {
             if (wasBrewing) {
                 debug('brew session has ended');
-                $scope.isActiveSession = false;    
+                $scope.isActiveSession = false;
             }
         }
     });
@@ -46,20 +44,9 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
             debug('a session was requested.  get the session details for', sessionId);
             getSessionInfo(sessionId)
                 .then(addRecipeSteps)
-                .then(getSessionLog)
-                .then(processLogEntries)
-                .then(function () {
-                    $timeout(updateLogEntries, $scope.config.pollingFrequency);
-                });
+                .then(updateLogEntries);
         }
     });
-
-    $scope.updateUserId = function updateUserId (evt, val) {
-        if (evt.which === 13) {
-            $scope.config.userId = val;
-            $location.search('userId', $scope.config.userId);
-        }
-    }
 
     $scope.updateId = function updateId (evt, key, val) {
         if (evt.which === 13) {
@@ -69,23 +56,20 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
     }
 
     init();
-    checkIfCurrentlyBrewing();
+    // checkIfCurrentlyBrewing();
 
     function init() {
         var queryParams = $location.search();
-        $scope.config.userId = queryParams.userId;
-        $scope.config.machineId = queryParams.machineId;
         $scope.config.sessionId = queryParams.sessionId;
-        $scope.config.debug = queryParams.debug === 'true';
+        $scope.config.debug = $scope.config.debug || queryParams.debug === 'true';
         $scope.isBrewing = false;
         $scope.isActiveSession = false;
-        debug('userId from url: ', $scope.config.userId);
-        debug('machineId from url: ', $scope.config.machineId);
         debug('sessionId from url: ', $scope.config.sessionId);
     }
 
+    // TODO
     function checkIfCurrentlyBrewing () {
-        return get('/Json/brewhouseJson.cshtml?user=' + $scope.config.userId + '&justname=5')
+        return get('/api/active_session')
             .then(function (data) {
                 $scope.isBrewing = data.data.replace(/"/g, '') === 'active';
                 debug('currently brewing?', $scope.isBrewing);
@@ -94,134 +78,90 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
             });
     }
 
+    // TODO
     function getActiveSession () {
-        return get('/Json/brewhouseJson.cshtml?user=' + $scope.config.userId + '&justname=3')
+        return get('/api/active_session')
             .then(function (data) {
-                if (data.data !== '""') {
-                    debug('active sessionId:', data.data.GUID);
-                    return data.data.GUID;
+                data = data.data;
+                if (data !== '""') {
+                    debug('active sessionId:', data.GUID);
+                    return data.GUID;
                 }
             });
     }
 
     function getSessionInfo (sessionId) {
-        return get('/Json/brewhouseJson.cshtml?user=' + $scope.config.userId + '&requestGUID=' + sessionId + '&ignoreWhetherCurrent=true&justname=3')
+        return get('/api/session/' + sessionId + '/recipe')
             .then(function (data) {
                 data = data.data;
-                if (data === '""') {
-                    console.error('no data for sessionId', data);
+                if (!data.recipe_id) {
+                    console.error('no recipeId for sessionId', data);
                     return;
                 }
-                debug('session info: ', data);
-                $scope.recipe = {
-                    name: data.Name,
-                    description: data.TastingNotes,
-                    ibu: data.IBU,
-                    og: data.OG,
-                    srm: data.SRM,
-                    style: data.StyleNameCode
-                };
-                $scope.session = {};
+                return get('/api/recipe/' + data.recipe_id + '/recipe')
+                .then(function (data) {
+                    var recipe = data.data;
+                    $scope.recipe = {
+                        id: recipe.guid,
+                        name: recipe.recName,
+                        description: recipe.beerText,
+                        srm: recipe.specs.SRM,
+                        style: recipe.specs.Style
+
+                    };
+                    $scope.session = {};
+                });
             });
     }
 
     function addRecipeSteps () {
-        return getAllRecipes()
-            .then(function (recipes) {
-                var _recipe = _.findWhere(recipes, {name: $scope.recipe.name});
-                // TODO:
-                if (!_recipe) {
-                    alert('The recipe for ' + $scope.recipe.name + ' could not be found.  Only recipes currently synced to your Zymatic can be viewed.')
+        return get('/api/recipe/' + $scope.recipe.id + "/control")
+            .then(function (data) {
+                var control_program = data.data;
+                if (!control_program && !control_program.steps) {
+                    alert('Recipe steps for ' + $scope.recipe.name + ' could not be found.')
                     return;
                 }
-                angular.extend($scope.recipe, _recipe);
+                control_program.steps.forEach(function (step) {
+                    step['time'] = step['time'] + step['drain'];
+
+                    if (step.index === Location.START) {
+                        // step 0 is a special case
+                        step.tempTransition = step.targetTemp - 60;
+                    } else if (step.location !== Location.PAUSE) {
+                        // 6 indicates pause
+                        step.tempTransition = step.targetTemp - control_program.steps[step.index-1].targetTemp;
+                    } else if (step.location === Location.PAUSE && step.targetTemp === 0) {
+                        step.targetTemp = control_program.steps[step.index-1].targetTemp;
+                    }
+                });
+
+                angular.extend($scope.recipe, control_program);
                 debug('current recipe: ', $scope.recipe);
             });
     }
 
-    function getAllRecipes() {
-        debug("getting all recipes");
-        return get('/API/SyncUser?user=' + $scope.config.userId + '&machine=' + $scope.config.machineId)
-            .then(parseRecipes);
-    }
-
-    function parseRecipes(data) {
-        debug("parsing all recipes");
-        data = data.data.slice(3, data.data.length-3);
-        var recipeStrings = data.split('|');
-        var recipes = [];
-        recipeStrings.forEach(function (recipeString) {
-            recipes.push(parseRecipe(recipeString));
-        });
-        return recipes;
-    }
-
-    function parseRecipe(string) {
-        var recipeString = string.split('/');
-        var recipe =  {
-            name:  recipeString[0].trim(),
-            id:    recipeString[1],
-            steps: []
-        };
-        for (var i = 2; i < recipeString.length; i++) {
-            if (recipeString[i]) {
-                var steps = recipeString[i].split(',');
-                var step = {
-                    index:      i - 2,
-                    name:       steps[0],
-                    targetTemp: parseInt(steps[1]),
-                    time:       parseInt(steps[2]) + parseInt(steps[4]),
-                    location:   parseInt(steps[3]),
-                };
-
-                if (step.index === Location.START) {
-                    // step 0 is a special case
-                    step.tempTransition = step.targetTemp - 60;
-                } else if (step.location !== Location.PAUSE) {
-                    // 6 indicates pause
-                    step.tempTransition = step.targetTemp - recipe.steps[step.index-1].targetTemp;
-                } else if (step.location === Location.PAUSE && step.targetTemp === 0) {
-                    step.targetTemp = recipe.steps[step.index-1].targetTemp;
-                }
-
-                recipe.steps.push(step);                
-            }
-        }
-        return recipe;
-    }
-
     function getSessionLog() {
-        return get('/Json/brewhouseJson.cshtml?user=' + $scope.config.userId + '&requestGUID=' + $scope.config.sessionId + '&ignoreWhetherCurrent=true')
+        return get('/api/session/' + $scope.config.sessionId + '/log')
             .then(function (data) {
-                if (data.data && data.data !== '""') {
-                    return parseLogEntries(data.data);
-                }
-                else {
-                    throw new Error('No log data');
-                }
+                var log = data.data;
+                log.forEach(function (logEntry) {
+                    logEntry['date'] = new Date(logEntry['Date']),
+                    logEntry['step'] = logEntry['Event'],
+                    logEntry['wortTemp'] = logEntry['WortTemp'],
+                    logEntry['note'] = logEntry['Note']
+                });
+                return log;
             });
-    }
-
-    function parseLogEntries (data) {
-        var entries = [];
-        data.split('|').forEach(function (entryString) {
-            var entryElements = entryString.split(',');
-            var entry = {
-                date:     new Date(parseInt(entryElements[0].replace(/"/g, ''))),
-                step:     entryElements[1].replace('null', ''),
-                wortTemp: parseInt(entryElements[2]),
-                note:     entryElements[7]
-            };
-            entries.push(entry);
-        });
-        return entries;
     }
 
     function updateLogEntries () {
         getSessionLog()
             .then(processLogEntries)
             .finally(function () {
-                $timeout(updateLogEntries, $scope.config.pollingFrequency);
+                if ($scope.isActiveSession) {
+                    $timeout(updateLogEntries, $scope.config.pollingFrequency);
+                }
             });
     }
 
@@ -290,7 +230,7 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
             debug(previous.name, "elapsed", previous.elapsedTimeInMin);
 
             // set the previous step to 'done', and make sure any steps
-            // previous to it are also marked 'done'.  sometimes there's 
+            // previous to it are also marked 'done'.  sometimes there's
             // no log entry for the start of a step, so it can get missed.
             var done = false;
             for( var i = $scope.recipe.steps.length - 1; i >= 0; i--) {
@@ -369,13 +309,12 @@ App.controller("SessionController", function($scope, $location, $http, $timeout)
         if ($scope.config.debug) {
             console.log.apply(console, arguments);
         }
-    }    
+    }
 
     function get(path) {
-        var url = 'https://cors-anywhere.herokuapp.com/'
-            + 'https://picobrew.com' + path + '&_=' + new Date().getTime();
+        var url = 'https://pico-proxy.herokuapp.com' + path + '&_=' + new Date().getTime();
         if ($scope.config.testServer) {
-            url = 'http://localhost:4567' + path;
+            url = 'http://localhost:3000' + path;
         }
         return $http.get(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
     }
@@ -411,8 +350,8 @@ App.filter('durationFormat', function () {
                     hours += 1;
                 }
                 var output = hours + ' hour';
-                if (hours > 1) { 
-                    output += 's'; 
+                if (hours > 1) {
+                    output += 's';
                 }
                 if (minutes > 0) {
                     output += ' ' + minutes + ' minutes';

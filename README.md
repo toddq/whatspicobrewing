@@ -12,28 +12,16 @@ I like my Picobrew quite a bit, but the web interface leaves quite a bit to be d
 
 ### Using
 
-###### Userscript
-The easiest thing is to install the browser user script which will add links to the Picobrew website to open the alternative view.  
+###### New in v2
 
-- First install either [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en) (if using Chrome) or [Greasemonkey](https://addons.mozilla.org/en-us/firefox/addon/greasemonkey/) (if using Firefox).
-- Then install the script by visiting [this link](http://toddq.github.io/whatspicobrewing/userscript/picobrew.user.js) and clicking 'Install'.
-- When logged into the [Picobrew](https://picobrew.com/) website you'll now see some new links or buttons for [Alt View] that will open in a new tab.
+v2 is currently being hosted in my Pico Proxy instance (see [that project](https://github.com/toddq/pico-proxy)) at http://pico-proxy.herokuapp.com/whats-picobrewing.
 
-###### Direct
-Alternatively you can connect to the page directly and enter your user id, machine id, and session id. To use with a mobile device (that doesn't allow userscripts) you'll need to send yourself the link for your machine.
-
-[https://toddq.github.io/whatspicobrewing](https://toddq.github.io/whatspicobrewing)
-
-- Your user id (it's not the one you log in with) can be retrieved by logging into your [Picobrew](https://picobrew.com/) account, opening the Javascript console, and entering `$('#user').val()`.
-- Your machine id can be retrieved from the [Picobrew Settings](https://picobrew.com/Members/User/EditSettings.cshtml) page.  It's the 'Zymatic ID'.
-- Session ids are available from the url when viewing session data on the Picobrew site.  If you leave the session id out and you're currently brewing, the active brew session will automatically be shown.
-
-I'm hosting the page publicly for your convenience, but it's designed as a simple single page that you're welcome to download and run on your own computer.  A web server isn't even required, it can simply be loaded from the file system.
+v1 was stand-alone HTML/JS able to pull data directly from Picobrew's website because they didn't require any authentication on fetching any data.  
 
 
 ### TODO
 
-- Add a link to the Now Brewing section at /Members/User/brewhouse.cshtml when active.
 - Add Notes
     - View
     - Create/Edit/Delete
+- Rewrite in VueJS
